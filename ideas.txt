@@ -1,0 +1,14 @@
+task priority starts with [1] as highest and gets less as the number grows
+
+new recipe page:
+- [2] convert units 
+- [3] local save short copy of recipe
+- [2] add notes section where ppl can write lines of notes freehand
+- [4] allow users to reference a note on a recipe line (for example if a step of the recipe needs more context it should reference a note which contains said info - for example pop up preview on wikipedia when hovering a linked word)
+- [3] difficulty rating and recipe rating
+- [5] list of necessary kitchen equipment
+- [10] photos, videos, gifs
+- [11] allow user to reference photos throughout the recipe
+
+view recipe page:
+- [1] adjust ingredient amounts based on servings 
