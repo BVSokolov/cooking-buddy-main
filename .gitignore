@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+#adding db.ts which has db credentials
+server/src/db/db.ts
