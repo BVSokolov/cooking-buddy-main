@@ -1,31 +1,124 @@
+enum TimeUOM {
+  MINUTE = 'minute',
+  HOUR = 'hour',
+  DAY = 'day',
+  WEEK = 'week',
+  MONT = 'month',
+  YEAR = 'year',
+}
+
+enum QuantityUOM {
+  GR = 'gr',
+  KG = 'kg',
+  TSP = 'tsp',
+  TBSP = 'Tbsp',
+  L = 'l',
+  ML = 'ml',
+  ITEM = 'item',
+  CUP = 'cup',
+  PINCH = 'pinch',
+}
+
+export type TimeMeasureUnit = Record<TimeUOM, string>
+export type QuantityMeasureUnit = Record<QuantityUOM, string>
+
+export type Ingredient = {
+  id: string
+  name: string
+}
+
 export type Recipe = {
   id: string
   name: string
-  content: {
-    ingredients: {
-      [key: string]: {id: string; name: string; value: string}
-    }
-    instructions: string[]
-  }
+  servings: string | null
+}
+
+export type RecipeTime = {
+  id: string
+  recipeId: string
+  inAdvance: number
+  prep: number
+  cook: number
+  total: number
+  inAdvanceUOM: TimeMeasureUnit
+  prepUOM: TimeMeasureUnit
+  cookUOM: TimeMeasureUnit
+  totalUOM: TimeMeasureUnit
+}
+
+export type RecipeSection = {
+  id: string
+  recipeId: string
+  name: string
+  position: number // ADD IN DB AS WELL
+}
+
+export type RecipeIngredient = {
+  id: string
+  ingredientId: string
+  recipeId: string
+  recipeSectionId: string
+  amount: number
+  amountUOM: QuantityMeasureUnit
+  position: number // ADD IN DB AS WELL
+}
+
+export type RecipeStep = {
+  id: string
+  recipeId: string
+  recipeSectionId: string | null
+  position: number // RENAME IN DB AS WELL
+  text: string
 }
 
 export type NewRecipeFormData = {
   name: string
-  timeInAdvance: string
-  timePrep: string
-  timeCook: string
-  timeTotal: string
   servings: string
+  time: {
+    inAdvance: number
+    prep: number
+    cook: number
+    total: number
+    inAdvanceUOM: TimeMeasureUnit
+    prepUOM: TimeMeasureUnit
+    cookUOM: TimeMeasureUnit
+    totalUOM: TimeMeasureUnit
+  }
+  sections: Array<{
+    name: string
+    position: number
+    // add color or whatever later, needs to be stored in db as well
+  }>
   ingredients: Array<{
     name: string
     amount: string
+    amountUOM: QuantityMeasureUnit
+    sectionIndex: number | null //the index within section[]
+    position: number
+    refId: string | null
   }>
   steps: Array<{
-    value: string
+    text: string
+    position: number
+    sectionIndex: number | null
   }>
 }
 
-// i have to make four tables next - ingredient, recipeIngredient, recipeSection and recipeStep
+//counter = 0
+// ref = {'ref<counter>'}
+// ref = {ref0, ref1}
+// step 1: chop the onions
+// text : chop the ref0
+// step 2: chop the garlic and throw the garlic and onions in the pan
+// text : chop the ref1 and throw the ref1 and ref0 in the pan
+
+// ingredients: [{onions, references: [ref0]}, ]
+
+// recipe columns will be id, name, servings
+// i have to make five tables next - recipeTime, ingredient, recipeIngredient, recipeSection and recipeStep
+
+// recipeTime columns will be id, recipeId, inAdvance, inAdvanceUOM, prep, prepUOM, cook, cookUOM, total, totalUOM
+// all time columns will store time in hours; the enum columns is to remember what the user input and so we can do the conversion back
 
 // ingredient columns will be id, name
 // recipeSection coulmns will be id, recipeId, name
@@ -33,12 +126,6 @@ export type NewRecipeFormData = {
 // ... will be a dropdown on UI side so it's always a positive number, UOM will be enum
 // recipeStep columns will be id, recipeId, recipeSectionId, number (as in step number, first, second etc), text
 
-// when creating a new recipe we first create an entry in recipe table
-// then we create each ingredient (if it doesn't exist) in the ingredient table and return its id
-// then (if there are any ingredient sections in the recipe) we create an entry for each section in the recipeSection table and return its id
-// then using recipeId and ingredientId (and recipeSectionId if available)...
-// ...we create an entry for each ingredient in the recipeIngredient table along amount and UOM
-// then using recipeId we create an entry for each step in the recipeStep table
 export type NewRecipeData = {
   name: string
   timeInAdvance: string

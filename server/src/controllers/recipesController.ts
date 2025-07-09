@@ -1,5 +1,5 @@
 import {Context} from 'koa'
-import {recipesDao} from '../daos/recipesDao'
+import {recipesDao} from '../daos/recipeDao'
 import {recipesFacade} from '../facades/recipesFacade'
 import {NewRecipeData, NewRecipeFormData} from '../../../types/types'
 
