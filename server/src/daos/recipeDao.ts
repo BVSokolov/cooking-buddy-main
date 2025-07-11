@@ -5,11 +5,12 @@ import {getFirstRow} from './utils'
 
 const getAll = async () => await db('recipe').select(['id', 'name'])
 
-const getById = async (id: string) => await getFirstRow(db('recipe').select(['id', 'name']).where({id}))
+const getById = async (id: string) =>
+  await getFirstRow(db('recipe').select(['id', 'name', 'servings']).where({id}))
 
 const createNew = async (data: Omit<Recipe, 'id'>) => await getFirstRow(db('recipe').insert(data, 'id'), 'id')
 
-export const recipesDao = {
+export const recipeDao = {
   getAll,
   getById,
   createNew,

@@ -57,7 +57,7 @@ export type RecipeIngredient = {
   id: string
   ingredientId: string
   recipeId: string
-  recipeSectionId: string
+  recipeSectionId: string | null
   amount: number
   amountUOM: QuantityMeasureUnit
   position: number // ADD IN DB AS WELL
@@ -91,7 +91,7 @@ export type NewRecipeFormData = {
   }>
   ingredients: Array<{
     name: string
-    amount: string
+    amount: number
     amountUOM: QuantityMeasureUnit
     sectionIndex: number | null //the index within section[]
     position: number
@@ -104,15 +104,20 @@ export type NewRecipeFormData = {
   }>
 }
 
+//=> on fronted only:
 //counter = 0
 // ref = {'ref<counter>'}
 // ref = {ref0, ref1}
-// step 1: chop the onions
+//<= on fronted only:
+
+// step 1: chop the onion
 // text : chop the ref0
-// step 2: chop the garlic and throw the garlic and onions in the pan
+// step 2: chop the garlic and throw the garlic and onion in the pan
 // text : chop the ref1 and throw the ref1 and ref0 in the pan
 
-// ingredients: [{onions, references: [ref0]}, ]
+// ingredients: [{name: onion, refId: ref0}, {name: garlic, refId: ref1}, {name: tomato, refId: null}]
+// steps: [{text: chop the ref0, position: 0, sectionIndex: null},
+//        {text: chop the ref1 and throw the ref1 and ref0 in the pan, position: 1, sectionIndex: null}]
 
 // recipe columns will be id, name, servings
 // i have to make five tables next - recipeTime, ingredient, recipeIngredient, recipeSection and recipeStep
