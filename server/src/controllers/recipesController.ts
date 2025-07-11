@@ -1,18 +1,18 @@
 import {Context} from 'koa'
-import {recipesDao} from '../daos/recipeDao'
+import {recipeDao} from '../daos/recipeDao'
 import {recipesFacade} from '../facades/recipesFacade'
 import {NewRecipeData, NewRecipeFormData} from '../../../types/types'
 
 const getRecipes = async (ctx: Context) => {
   ctx.status = 200
-  ctx.body = await recipesDao.getAll()
+  ctx.body = await recipeDao.getAll()
   return ctx
 }
 
 const getRecipe = async (ctx: Context) => {
   const {recipeId} = ctx.params
   ctx.status = 200
-  ctx.body = await recipesDao.getById(recipeId)
+  ctx.body = await recipeDao.getById(recipeId)
   return ctx
 }
 
@@ -21,7 +21,7 @@ type NewRecipeEndpointCtx = Context & {
 }
 const newRecipe = async (ctx: NewRecipeEndpointCtx) => {
   const recipeData = ctx.body
-  console.log('asd ENDPOINT', recipeData)
+  console.log('asd ENDPOINT')
   // call facade which calls dao which stores new recipe and returns id to facade and then back here
   // get recipe id from facade and get recipe from dao to return as response body (alongside id)
   const recipeId = await recipesFacade.newRecipe(recipeData)
