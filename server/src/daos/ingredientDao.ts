@@ -6,7 +6,7 @@ const createNew = async (data: Omit<Ingredient, 'id'>) =>
   await getFirstRow(db('ingredient').insert(data, 'id'), 'id')
 
 const getByName = async (name: Ingredient['name']) =>
-  await getFirstRow(db('ingredient').where('name', name).select('id'))
+  await getFirstRow(db('ingredient').where('name', name), 'id')
 
 const gotByName = async (name: Ingredient['name']) => {
   console.log('in gotByName ', name)

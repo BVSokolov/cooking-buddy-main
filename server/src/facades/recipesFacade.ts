@@ -5,6 +5,7 @@ import {recipeSectionDao} from '../daos/recipeSectionDao'
 import {ingredientDao} from '../daos/ingredientDao'
 import {recipeIngredientDao} from '../daos/recipeIngredientDao'
 import {recipeStepDao} from '../daos/recipeStepDao'
+import {dbTrx} from '../daos/utils'
 
 const importRecipe = (source: string) => {
   console.log('asd in import', source)
@@ -12,7 +13,7 @@ const importRecipe = (source: string) => {
   return {ingredients: ['test']}
 }
 
-const newRecipe = async (recipeData: NewRecipeFormData) => {
+const newRecipeFn = async (recipeData: NewRecipeFormData) => {
   console.log('asd in newRecipe FACADE')
   // when creating a new recipe we first create an entry in recipe table and get its id
   const {name, servings, time} = recipeData
@@ -41,10 +42,12 @@ const newRecipe = async (recipeData: NewRecipeFormData) => {
   steps.map(async ({text, position, sectionIndex}) => {
     // search and replace any ref strings with recipeIngredientId in text here when i implement that on frontend
     const recipeSectionId = sectionIndexToIdMap[sectionIndex]
-    await recipeStepDao.createNew({recipeId, recipeSectionId, text, position})
+    await recipeStepDao.createNew({recipeId, recipeSectionId, text, position}) //.then(trx.commit).catch(trx.rollback)
   })
   return recipeId
 }
+
+const newRecipe = async (recipeData: NewRecipeFormData) => (await dbTrx(newRecipeFn(recipeData))) as string
 
 const getById = async (id: string): Promise<any> => {
   const recipe = await recipeDao.getById(id)
