@@ -1,9 +1,8 @@
-import {Knex} from 'knex'
 import {RecipeSection} from '../../../types/types'
-import {db} from '../db/db'
+import {DaoContext} from '../types/types'
 import {getFirstRow} from './utils'
 
-const createNew = async (trx: Knex.Transaction, data: Omit<RecipeSection, 'id'>) =>
+const createNew = async (trx: DaoContext['trx'], data: Omit<RecipeSection, 'id'>) =>
   await getFirstRow(trx('recipeSection').insert(data, 'id'), 'id')
 
 export const recipeSectionDao = {
