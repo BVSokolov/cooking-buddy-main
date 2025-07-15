@@ -35,8 +35,13 @@ const newRecipe = async ({db, trx}: FacadeContext, recipeData: NewRecipeFormData
   const {ingredients} = recipeData
   for (const {name, refId, sectionIndex, ...rest} of ingredients) {
     const ingredientId = await ingredientDao.gotByName({db, trx}, name)
-    console.log('ingredient id ', ingredientId)
     const recipeSectionId = sectionIndexToIdMap[sectionIndex]
+
+    if (sectionIndex !== undefined && recipeSectionId === undefined)
+      throw new Error(
+        `ingredient ${name} position ${rest.position} section index ${sectionIndex} to id ${recipeSectionId} mismatch`,
+      )
+
     await recipeIngredientDao.createNew(trx, {recipeId, ingredientId, recipeSectionId, ...rest})
   }
 
@@ -45,6 +50,12 @@ const newRecipe = async ({db, trx}: FacadeContext, recipeData: NewRecipeFormData
   for (const {text, position, sectionIndex} of steps) {
     // search and replace any ref strings with recipeIngredientId in text here when i implement that on frontend
     const recipeSectionId = sectionIndexToIdMap[sectionIndex]
+
+    if (sectionIndex !== undefined && recipeSectionId === undefined)
+      throw new Error(
+        `step position ${position} section index ${sectionIndex} to id ${recipeSectionId} mismatch`,
+      )
+
     await recipeStepDao.createNew(trx, {recipeId, recipeSectionId, text, position}) //.then(trx.commit).catch(trx.rollback)
   }
 
