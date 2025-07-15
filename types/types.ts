@@ -74,21 +74,8 @@ export type RecipeStep = {
 export type NewRecipeFormData = {
   name: string
   servings: string
-  time: {
-    inAdvance: number
-    prep: number
-    cook: number
-    total: number
-    inAdvanceUOM: TimeMeasureUnit
-    prepUOM: TimeMeasureUnit
-    cookUOM: TimeMeasureUnit
-    totalUOM: TimeMeasureUnit
-  }
-  sections: Array<{
-    name: string
-    position: number
-    // add color or whatever later, needs to be stored in db as well
-  }>
+  time: Omit<RecipeTime, 'id' | 'recipeId'>
+  sections: Array<Omit<RecipeSection, 'id' | 'recipeId'>> // add color or whatever later, needs to be stored in db as well
   ingredients: Array<{
     name: string
     amount: number

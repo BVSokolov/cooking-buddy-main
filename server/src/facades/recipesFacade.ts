@@ -65,7 +65,14 @@ const newRecipe = async ({db, trx}: FacadeContext, recipeData: NewRecipeFormData
 
 const getById = async (db: FacadeContext['db'], id: string): Promise<any> => {
   const recipe = await recipeDao.getById(db, id)
-  console.log('asd in getById FACADE recipe', id, recipe)
+  if (recipe === undefined) throw new Error('could not find recipe with provided id')
+  // get all recipeTime rows for recipeId
+  // get all recipeSection rows for recipeId
+  // get all recipeIngredient rows for recipeId
+  // get all recipeStep rows for recipeId
+  // possibly reformat and then place in result obj
+  // return result obj
+
   return recipe
 }
 
