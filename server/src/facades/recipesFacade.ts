@@ -1,5 +1,5 @@
 import {recipeDao} from '../daos/recipeDao'
-import {NewRecipeFormData} from '../../../types/types'
+import {NewRecipeFormData, RecipeData} from '../../../types/types'
 import {recipeTimeDao} from '../daos/recipeTimeDao'
 import {recipeSectionDao} from '../daos/recipeSectionDao'
 import {ingredientDao} from '../daos/ingredientDao'
@@ -29,18 +29,25 @@ const newRecipe = async ({db, trx}: FacadeContext, recipeData: NewRecipeFormData
     sectionIndexToIdMap[position] = sectionId
   }
 
+  const getSectionId = (sectionIndex: number | null, errorMsg: string) => {
+    if (sectionIndex === null) return undefined
+
+    const sectionId = sectionIndexToIdMap[sectionIndex]
+    if (sectionId === undefined) throw new Error(errorMsg)
+
+    return sectionId
+  }
+
   // then we create each ingredient (if it doesn't exist) in the ingredient table and return its id
   // then using recipeId and ingredientId (and recipeSectionId if available)...
   // ...we create an entry for each ingredient in the recipeIngredient table along amount and UOM
   const {ingredients} = recipeData
   for (const {name, refId, sectionIndex, ...rest} of ingredients) {
-    const ingredientId = await ingredientDao.gotByName({db, trx}, name)
-    const recipeSectionId = sectionIndexToIdMap[sectionIndex]
-
-    if (sectionIndex !== undefined && recipeSectionId === undefined)
-      throw new Error(
-        `ingredient ${name} position ${rest.position} section index ${sectionIndex} to id ${recipeSectionId} mismatch`,
-      )
+    const ingredientId = await ingredientDao.gotIdByName({db, trx}, name)
+    const recipeSectionId = getSectionId(
+      sectionIndex,
+      `ingredient ${name} position ${rest.position} section index ${sectionIndex} to id mismatch`,
+    )
 
     await recipeIngredientDao.createNew(trx, {recipeId, ingredientId, recipeSectionId, ...rest})
   }
@@ -49,13 +56,10 @@ const newRecipe = async ({db, trx}: FacadeContext, recipeData: NewRecipeFormData
   const {steps} = recipeData
   for (const {text, position, sectionIndex} of steps) {
     // search and replace any ref strings with recipeIngredientId in text here when i implement that on frontend
-    const recipeSectionId = sectionIndexToIdMap[sectionIndex]
-
-    if (sectionIndex !== undefined && recipeSectionId === undefined)
-      throw new Error(
-        `step position ${position} section index ${sectionIndex} to id ${recipeSectionId} mismatch`,
-      )
-
+    const recipeSectionId = getSectionId(
+      sectionIndex,
+      `step position ${position} section index ${sectionIndex} to id mismatch`,
+    )
     await recipeStepDao.createNew(trx, {recipeId, recipeSectionId, text, position}) //.then(trx.commit).catch(trx.rollback)
   }
 
@@ -63,17 +67,17 @@ const newRecipe = async ({db, trx}: FacadeContext, recipeData: NewRecipeFormData
   return recipeId
 }
 
-const getById = async (db: FacadeContext['db'], id: string): Promise<any> => {
-  const recipe = await recipeDao.getById(db, id)
+const getById = async (db: FacadeContext['db'], recipeId: string): Promise<RecipeData> => {
+  const recipe = await recipeDao.getById(db, recipeId)
   if (recipe === undefined) throw new Error('could not find recipe with provided id')
-  // get all recipeTime rows for recipeId
-  // get all recipeSection rows for recipeId
-  // get all recipeIngredient rows for recipeId
-  // get all recipeStep rows for recipeId
-  // possibly reformat and then place in result obj
-  // return result obj
 
-  return recipe
+  const time = await recipeTimeDao.getByRecipeId(db, recipeId)
+  const sections = await recipeSectionDao.getByRecipeId(db, recipeId)
+  const ingredients = await recipeIngredientDao.getByRecipeId(db, recipeId)
+  const steps = await recipeStepDao.getByRecipeId(db, recipeId)
+  const result: RecipeData = {...recipe, time, sections, ingredients, steps}
+
+  return result
 }
 
 export const recipesFacade = {importRecipe, newRecipe, getById}

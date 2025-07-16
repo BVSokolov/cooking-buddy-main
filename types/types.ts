@@ -1,4 +1,4 @@
-enum TimeUOM {
+export enum TimeUOM {
   MINUTE = 'minute',
   HOUR = 'hour',
   DAY = 'day',
@@ -7,7 +7,7 @@ enum TimeUOM {
   YEAR = 'year',
 }
 
-enum QuantityUOM {
+export enum QuantityUOM {
   GR = 'gr',
   KG = 'kg',
   TSP = 'tsp',
@@ -118,11 +118,8 @@ export type NewRecipeFormData = {
 // ... will be a dropdown on UI side so it's always a positive number, UOM will be enum
 // recipeStep columns will be id, recipeId, recipeSectionId, number (as in step number, first, second etc), text
 
-export type NewRecipeData = {
-  name: string
-  timeInAdvance: string
-  timePrep: string
-  timeCook: string
-  timeTotal: string
-  servings: string
-}
+export type RecipeData = Recipe &
+  RecipeTime &
+  Array<RecipeSection> &
+  Array<RecipeIngredient> &
+  Array<RecipeStep>
