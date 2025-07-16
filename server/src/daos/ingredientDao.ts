@@ -2,21 +2,23 @@ import {Ingredient} from '../../../types/types'
 import {getFirstRow} from './utils'
 import {DaoContext} from '../types/types'
 
-const createNew = async (trx: DaoContext['trx'], data: Omit<Ingredient, 'id'>) =>
-  await getFirstRow(trx('ingredient').insert(data, 'id'), 'id')
+const TABLE_NAME = 'ingredient'
 
-const getByName = async (db: DaoContext['db'], name: Ingredient['name']) => {
+const createNew = async (trx: DaoContext['trx'], data: Omit<Ingredient, 'id'>): Promise<Ingredient['id']> =>
+  await getFirstRow(trx(TABLE_NAME).insert(data, 'id'), 'id')
+
+const getIdByName = async (db: DaoContext['db'], name: Ingredient['name']): Promise<Ingredient['id']> => {
   if (!name) throw new Error(`expected string value for name, got ${name}`)
-  return await getFirstRow(db('ingredient').where({name}), 'id')
+  return await getFirstRow(db(TABLE_NAME).where({name}), 'id')
 }
 
-const gotByName = async ({db, trx}: DaoContext, name: Ingredient['name']) => {
-  const id = await getByName(db, name)
+const gotIdByName = async ({db, trx}: DaoContext, name: Ingredient['name']): Promise<Ingredient['id']> => {
+  const id = await getIdByName(db, name)
   return id ? id : await createNew(trx, {name})
 }
 
 export const ingredientDao = {
   createNew,
-  getByName,
-  gotByName,
+  getIdByName,
+  gotIdByName,
 }
