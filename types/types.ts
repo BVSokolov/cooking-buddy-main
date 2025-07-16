@@ -30,20 +30,20 @@ export type Ingredient = {
 export type Recipe = {
   id: string
   name: string
-  servings: string | null
+  servings: number | null
 }
 
 export type RecipeTime = {
   id: string
   recipeId: string
-  inAdvance: number
-  prep: number
-  cook: number
-  total: number
-  inAdvanceUOM: TimeMeasureUnit
-  prepUOM: TimeMeasureUnit
-  cookUOM: TimeMeasureUnit
-  totalUOM: TimeMeasureUnit
+  inAdvance: number | null
+  prep: number | null
+  cook: number | null
+  total: number | null
+  inAdvanceUOM: TimeMeasureUnit | null
+  prepUOM: TimeMeasureUnit | null
+  cookUOM: TimeMeasureUnit | null
+  totalUOM: TimeMeasureUnit | null
 }
 
 export type RecipeSection = {
@@ -71,9 +71,7 @@ export type RecipeStep = {
   text: string
 }
 
-export type NewRecipeFormData = {
-  name: string
-  servings: string
+export type NewRecipeFormData = Omit<Recipe, 'id'> & {
   time: Omit<RecipeTime, 'id' | 'recipeId'>
   sections: Array<Omit<RecipeSection, 'id' | 'recipeId'>> // add color or whatever later, needs to be stored in db as well
   ingredients: Array<{
