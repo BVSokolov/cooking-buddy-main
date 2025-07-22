@@ -1,7 +1,12 @@
-import {FC, InputHTMLAttributes} from 'react'
+import {FC, InputHTMLAttributes, useState} from 'react'
 import {FormProvider, useFieldArray, useForm, useFormContext} from 'react-hook-form'
 import {useNewRecipeMutation} from '../../queries/recipeQueries'
-import {NewRecipeFormData} from '../../../../types/types'
+import {
+  NewRecipeFormData,
+  NewRecipeIngredientFormData,
+  NewRecipeSectionFormData,
+  NewRecipeStepFormData,
+} from '../../../../types/types'
 
 //==> TODO remove these
 export enum TimeUOM {
@@ -63,6 +68,30 @@ const FormSelect: FC<FormSelectProps> = ({name, label, children, ...props}) => {
 }
 // <==
 
+const getDefaultSectionValues = (tempSectionId: number | null): NewRecipeSectionFormData => ({
+  name: '',
+  tempSectionId,
+})
+
+const getDefaultIngredientValues = (
+  index: number,
+  tempSectionId: number | null,
+): NewRecipeIngredientFormData => ({
+  name: '',
+  amount: 0,
+  //@ts-ignore TODO: remove this and fix the shared types
+  amountUOM: QuantityUOM.ITEM,
+  position: index,
+  refId: null,
+  tempSectionId,
+})
+
+const getDefaultStepValues = (index: number, tempSectionId: number | null): NewRecipeStepFormData => ({
+  text: '',
+  position: index,
+  tempSectionId,
+})
+
 const getDefaultValues = (): NewRecipeFormData => ({
   name: '',
   servings: null,
@@ -81,63 +110,162 @@ const getDefaultValues = (): NewRecipeFormData => ({
   steps: [],
 })
 
+const Section = ({
+  currentLoopTempSectionId,
+  tempSectionId,
+}: {
+  currentLoopTempSectionId: NewRecipeSectionFormData['tempSectionId']
+  tempSectionId: NewRecipeSectionFormData['tempSectionId']
+}) => {
+  console.log('tempSectionId ', tempSectionId)
+  const {fields: sectionFields} = useFieldArray<
+    Partial<{sections: NewRecipeFormData['sections']}>,
+    'sections',
+    'id'
+  >({
+    name: 'sections',
+  })
+  console.log('sections ', sectionFields)
+
+  const getSectionById = (tempSectionId: NewRecipeSectionFormData['tempSectionId']) => {
+    const index = sectionFields.findIndex(
+      (value: NewRecipeSectionFormData) => value.tempSectionId === tempSectionId,
+    )
+    if (index === -1) return null
+    return {index, section: sectionFields.at(index)}
+  }
+  const getSectionInfo = () => {
+    console.log('currentLoopTempSectionId and tempSectionId', currentLoopTempSectionId, tempSectionId)
+    if (currentLoopTempSectionId === tempSectionId) return null
+
+    currentLoopTempSectionId = tempSectionId
+    const section = getSectionById(currentLoopTempSectionId)
+    return section
+  }
+  const sectionInfo = getSectionInfo()
+  console.log('sectionInfo ', sectionInfo, sectionInfo?.section?.id)
+
+  return sectionInfo ? (
+    <div key={sectionInfo.section!.id}>
+      <FormInput name={`sections.${sectionInfo.index}.name`} type="text" required />
+    </div>
+  ) : (
+    <></>
+  )
+}
+
 const Ingredients = () => {
-  const {fields, append} = useFieldArray({
+  const {fields: ingredientFields, append: appendIngredient} = useFieldArray<
+    Partial<{ingredients: NewRecipeFormData['ingredients']}>,
+    'ingredients',
+    'id'
+  >({
     name: 'ingredients',
   })
+  const {fields: sectionFields, append: appendSection} = useFieldArray<
+    Partial<{sections: NewRecipeFormData['sections']}>,
+    'sections',
+    'id'
+  >({
+    name: 'sections',
+  })
 
+  let currentCreateTempSectionId: NewRecipeSectionFormData['tempSectionId'] =
+    sectionFields.at(-1) !== undefined ? sectionFields.at(-1)!.tempSectionId : null
   const onClickAddIngredient = () => {
-    append({
-      name: '',
-      amount: null,
-      amountUOM: QuantityUOM.ITEM,
-    })
+    appendIngredient(getDefaultIngredientValues(ingredientFields.length, currentCreateTempSectionId))
   }
 
+  const onClickAddSection = () => {
+    currentCreateTempSectionId = Date.now()
+    appendSection(getDefaultSectionValues(currentCreateTempSectionId))
+    onClickAddIngredient()
+  }
+
+  let currentLoopTempSectionId: NewRecipeSectionFormData['tempSectionId'] = null
   return (
     <>
       <h4>Ingredients</h4>
-      <input type="button" value="+" onClick={onClickAddIngredient} />
-      {fields.map((field, index) => (
-        <div key={field.id}>
-          <FormInput name={`ingredients.${index}.name`} label="name" type="text" required />
-          <FormInput name={`ingredients.${index}.amount`} label="amount" type="number" required />
-          <FormSelect name={`ingredients.${index}.amountUOM`} required>
-            {Object.keys(QuantityUOM).map((key) => (
-              //@ts-ignore TODO fix this can't deal with this shit right now...........
-              <option value={QuantityUOM[key]}>{key}</option>
-            ))}
-          </FormSelect>
-        </div>
-      ))}
+      {ingredientFields.map((ingredientField, index) => {
+        console.log('ingredient field ', ingredientField)
+
+        return (
+          <div>
+            <Section
+              currentLoopTempSectionId={currentLoopTempSectionId}
+              tempSectionId={ingredientField.tempSectionId}
+            />
+            <div key={ingredientField.id}>
+              <FormInput name={`ingredients.${index}.name`} label="name" type="text" required />
+              <FormInput name={`ingredients.${index}.amount`} label="amount" type="number" required />
+              <FormSelect name={`ingredients.${index}.amountUOM`} required>
+                {Object.keys(QuantityUOM).map((key) => (
+                  //@ts-ignore TODO fix this can't deal with this shit right now...........
+                  <option value={QuantityUOM[key]}>{key}</option>
+                ))}
+              </FormSelect>
+            </div>
+          </div>
+        )
+      })}
+      <div>
+        <input type="button" value="add ingredient" onClick={onClickAddIngredient} />
+        <input type="button" value="add section" onClick={onClickAddSection} />
+      </div>
     </>
   )
 }
 
 const Steps = () => {
-  const {fields, append} = useFieldArray({
+  const {fields: stepFields, append: appendStep} = useFieldArray<
+    Partial<{steps: NewRecipeFormData['steps']}>,
+    'steps',
+    'id'
+  >({
     name: 'steps',
   })
+  const {fields: sectionFields, append: appendSection} = useFieldArray<
+    Partial<{sections: NewRecipeFormData['sections']}>,
+    'sections',
+    'id'
+  >({
+    name: 'sections',
+  })
 
+  let currentCreateTempSectionId: NewRecipeSectionFormData['tempSectionId'] =
+    sectionFields.at(-1) !== undefined ? sectionFields.at(-1)!.tempSectionId : null
   const onClickAddStep = () => {
-    append({
-      text: '',
-      position: fields.length,
-      sectionIndex: null,
-    })
+    appendStep(getDefaultStepValues(stepFields.length, currentCreateTempSectionId))
   }
 
-  console.log('steps size', fields.length)
+  const onClickAddSection = () => {
+    currentCreateTempSectionId = Date.now()
+    appendSection(getDefaultSectionValues(currentCreateTempSectionId))
+    onClickAddStep()
+  }
+
+  let currentLoopTempSectionId: NewRecipeSectionFormData['tempSectionId'] = null
+
+  console.log('steps size', stepFields.length)
 
   return (
     <>
       <h4>Steps</h4>
-      <input type="button" value="+" onClick={onClickAddStep} />
-      {fields.map((field, index) => (
-        <div key={field.id}>
-          <FormInput name={`steps.${index}.text`} />
+      {stepFields.map((stepField, index) => (
+        <div>
+          <Section
+            currentLoopTempSectionId={currentLoopTempSectionId}
+            tempSectionId={stepField.tempSectionId}
+          />
+          <div key={stepField.id}>
+            <FormInput name={`steps.${index}.text`} />
+          </div>
         </div>
       ))}
+      <div>
+        <input type="button" value="add step" onClick={onClickAddStep} />
+        <input type="button" value="add section" onClick={onClickAddSection} />
+      </div>
     </>
   )
 }
@@ -153,7 +281,7 @@ export const NewRecipePage = () => {
 
   const onSubmit = (formData: {}) => {
     alert(JSON.stringify(formData))
-    mutation.mutate(formData)
+    // mutation.mutate(formData)
   }
 
   return (

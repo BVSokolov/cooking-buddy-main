@@ -50,7 +50,6 @@ export type RecipeSection = {
   id: string
   recipeId: string
   name: string
-  position: number // ADD IN DB AS WELL
 }
 
 export type RecipeIngredient = {
@@ -60,33 +59,42 @@ export type RecipeIngredient = {
   recipeSectionId: string | null
   amount: number
   amountUOM: QuantityMeasureUnit
-  position: number // ADD IN DB AS WELL
+  position: number
 }
 
 export type RecipeStep = {
   id: string
   recipeId: string
   recipeSectionId: string | null
-  position: number // RENAME IN DB AS WELL
+  position: number
   text: string
+}
+
+export type NewRecipeSectionFormData = {
+  name: string
+  tempSectionId: number | null
+}
+
+export type NewRecipeIngredientFormData = {
+  name: string
+  amount: number
+  amountUOM: QuantityMeasureUnit
+  tempSectionId: NewRecipeSectionFormData['tempSectionId'] //current time millis when section was created
+  position: number
+  refId: string | null
+}
+
+export type NewRecipeStepFormData = {
+  text: string
+  position: number
+  tempSectionId: NewRecipeSectionFormData['tempSectionId']
 }
 
 export type NewRecipeFormData = Omit<Recipe, 'id'> & {
   time: Omit<RecipeTime, 'id' | 'recipeId'>
-  sections: Array<Omit<RecipeSection, 'id' | 'recipeId'>> // add color or whatever later, needs to be stored in db as well
-  ingredients: Array<{
-    name: string
-    amount: number
-    amountUOM: QuantityMeasureUnit
-    sectionIndex: number | null //the index within section[]
-    position: number
-    refId: string | null
-  }>
-  steps: Array<{
-    text: string
-    position: number
-    sectionIndex: number | null
-  }>
+  sections: Array<NewRecipeSectionFormData> // add color or whatever later, needs to be stored in db as well
+  ingredients: Array<NewRecipeIngredientFormData>
+  steps: Array<NewRecipeStepFormData>
 }
 
 //=> on fronted only:
