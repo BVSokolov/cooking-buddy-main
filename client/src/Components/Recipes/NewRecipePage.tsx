@@ -1,4 +1,4 @@
-import {FC, InputHTMLAttributes, useState} from 'react'
+import {FC, InputHTMLAttributes} from 'react'
 import {FormProvider, useFieldArray, useForm, useFormContext} from 'react-hook-form'
 import {useNewRecipeMutation} from '../../queries/recipeQueries'
 import {
@@ -117,7 +117,7 @@ const Section = ({
   currentLoopTempSectionId: NewRecipeSectionFormData['tempSectionId']
   tempSectionId: NewRecipeSectionFormData['tempSectionId']
 }) => {
-  console.log('tempSectionId ', tempSectionId)
+  console.log('Section')
   const {fields: sectionFields} = useFieldArray<
     Partial<{sections: NewRecipeFormData['sections']}>,
     'sections',
@@ -125,33 +125,18 @@ const Section = ({
   >({
     name: 'sections',
   })
-  console.log('sections ', sectionFields)
+  console.log('sections', sectionFields)
+  console.log(`currentLoopTempSectionId ${currentLoopTempSectionId}, tempSectionId ${tempSectionId}`)
+  if (currentLoopTempSectionId === tempSectionId) return null
 
-  const getSectionById = (tempSectionId: NewRecipeSectionFormData['tempSectionId']) => {
-    const index = sectionFields.findIndex(
-      (value: NewRecipeSectionFormData) => value.tempSectionId === tempSectionId,
-    )
-    if (index === -1) return null
-    return {index, section: sectionFields.at(index)}
-  }
-  const getSectionInfo = () => {
-    console.log('currentLoopTempSectionId and tempSectionId', currentLoopTempSectionId, tempSectionId)
-    if (currentLoopTempSectionId === tempSectionId) return null
-
-    currentLoopTempSectionId = tempSectionId
-    const section = getSectionById(currentLoopTempSectionId)
-    return section
-  }
-  const sectionInfo = getSectionInfo()
-  console.log('sectionInfo ', sectionInfo, sectionInfo?.section?.id)
-
-  return sectionInfo ? (
-    <div key={sectionInfo.section!.id}>
-      <FormInput name={`sections.${sectionInfo.index}.name`} type="text" required />
-    </div>
-  ) : (
-    <></>
+  console.log('current loop temp id changed')
+  const sectionIndex = sectionFields.findIndex(
+    (value: NewRecipeSectionFormData) => value.tempSectionId === tempSectionId,
   )
+  console.log('sectionIndex ', sectionIndex)
+  if (sectionIndex === -1) return null
+
+  return <FormInput name={`sections.${sectionIndex}.name`} type="text" required />
 }
 
 const Ingredients = () => {
@@ -188,20 +173,29 @@ const Ingredients = () => {
       <h4>Ingredients</h4>
       {ingredientFields.map((ingredientField, index) => {
         console.log('ingredient field ', ingredientField)
-
+        const SectionEl = (
+          <Section
+            key={`${ingredientField.id}-section`}
+            currentLoopTempSectionId={currentLoopTempSectionId}
+            tempSectionId={ingredientField.tempSectionId}
+          />
+        )
+        if (SectionEl !== null) currentLoopTempSectionId = ingredientField.tempSectionId
         return (
-          <div>
-            <Section
-              currentLoopTempSectionId={currentLoopTempSectionId}
-              tempSectionId={ingredientField.tempSectionId}
-            />
-            <div key={ingredientField.id}>
+          <div key={`${ingredientField.id}-row`}>
+            {SectionEl}
+            <div key={`${ingredientField.id}-ingredient`}>
               <FormInput name={`ingredients.${index}.name`} label="name" type="text" required />
               <FormInput name={`ingredients.${index}.amount`} label="amount" type="number" required />
               <FormSelect name={`ingredients.${index}.amountUOM`} required>
                 {Object.keys(QuantityUOM).map((key) => (
-                  //@ts-ignore TODO fix this can't deal with this shit right now...........
-                  <option value={QuantityUOM[key]}>{key}</option>
+                  <option
+                    key={`${ingredientField.id}-ingredient-amountuom-option-${key}`}
+                    //@ts-ignore TODO fix this can't deal with this shit right now...........
+                    value={QuantityUOM[key]}
+                  >
+                    {key}
+                  </option>
                 ))}
               </FormSelect>
             </div>
@@ -253,10 +247,10 @@ const Steps = () => {
       <h4>Steps</h4>
       {stepFields.map((stepField, index) => (
         <div>
-          <Section
+          {/* <Section
             currentLoopTempSectionId={currentLoopTempSectionId}
             tempSectionId={stepField.tempSectionId}
-          />
+          /> */}
           <div key={stepField.id}>
             <FormInput name={`steps.${index}.text`} />
           </div>
