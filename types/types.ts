@@ -1,9 +1,10 @@
 export enum TimeUOM {
+  NONE = 'none',
   MINUTE = 'minute',
   HOUR = 'hour',
   DAY = 'day',
   WEEK = 'week',
-  MONT = 'month',
+  MONTH = 'month',
   YEAR = 'year',
 }
 
@@ -40,10 +41,10 @@ export type RecipeTime = {
   prep: number | null
   cook: number | null
   total: number | null
-  inAdvanceUOM: TimeMeasureUnit | null
-  prepUOM: TimeMeasureUnit | null
-  cookUOM: TimeMeasureUnit | null
-  totalUOM: TimeMeasureUnit | null
+  inAdvanceUOM: TimeMeasureUnit
+  prepUOM: TimeMeasureUnit
+  cookUOM: TimeMeasureUnit
+  totalUOM: TimeMeasureUnit
 }
 
 export type RecipeSection = {
@@ -111,18 +112,6 @@ export type NewRecipeFormData = Omit<Recipe, 'id'> & {
 // ingredients: [{name: onion, refId: ref0}, {name: garlic, refId: ref1}, {name: tomato, refId: null}]
 // steps: [{text: chop the ref0, position: 0, sectionIndex: null},
 //        {text: chop the ref1 and throw the ref1 and ref0 in the pan, position: 1, sectionIndex: null}]
-
-// recipe columns will be id, name, servings
-// i have to make five tables next - recipeTime, ingredient, recipeIngredient, recipeSection and recipeStep
-
-// recipeTime columns will be id, recipeId, inAdvance, inAdvanceUOM, prep, prepUOM, cook, cookUOM, total, totalUOM
-// all time columns will store time in hours; the enum columns is to remember what the user input and so we can do the conversion back
-
-// ingredient columns will be id, name
-// recipeSection coulmns will be id, recipeId, name
-// recipeIngredient columns will be id, ingredientId, recipeSectionId, recipeId, amount: int, unit of measurement: enum - amount...
-// ... will be a dropdown on UI side so it's always a positive number, UOM will be enum
-// recipeStep columns will be id, recipeId, recipeSectionId, number (as in step number, first, second etc), text
 
 export type RecipeData = Recipe &
   RecipeTime &

@@ -10,11 +10,12 @@ import {
 
 //==> TODO remove these
 export enum TimeUOM {
+  NONE = 'none',
   MINUTE = 'minute',
   HOUR = 'hour',
   DAY = 'day',
   WEEK = 'week',
-  MONT = 'month',
+  MONTH = 'month',
   YEAR = 'year',
 }
 
@@ -100,10 +101,14 @@ const getDefaultValues = (): NewRecipeFormData => ({
     inAdvance: null,
     prep: null,
     total: null,
-    cookUOM: null,
-    inAdvanceUOM: null,
-    prepUOM: null,
-    totalUOM: null,
+    //@ts-ignore TODO: remove this and fix the shared types
+    cookUOM: TimeUOM.NONE,
+    //@ts-ignore TODO: remove this and fix the shared types
+    inAdvanceUOM: TimeUOM.NONE,
+    //@ts-ignore TODO: remove this and fix the shared types
+    prepUOM: TimeUOM.NONE,
+    //@ts-ignore TODO: remove this and fix the shared types
+    totalUOM: TimeUOM.NONE,
   },
   sections: [],
   ingredients: [],
@@ -169,7 +174,7 @@ const Ingredients = () => {
 
   let currentLoopTempSectionId: NewRecipeSectionFormData['tempSectionId'] = null
   return (
-    <>
+    <div>
       <h4>Ingredients</h4>
       {ingredientFields.map((ingredientField, index) => {
         console.log('ingredient field ', ingredientField)
@@ -188,12 +193,8 @@ const Ingredients = () => {
               <FormInput name={`ingredients.${index}.name`} label="name" type="text" required />
               <FormInput name={`ingredients.${index}.amount`} label="amount" type="number" required />
               <FormSelect name={`ingredients.${index}.amountUOM`} required>
-                {Object.keys(QuantityUOM).map((key) => (
-                  <option
-                    key={`${ingredientField.id}-ingredient-amountuom-option-${key}`}
-                    //@ts-ignore TODO fix this can't deal with this shit right now...........
-                    value={QuantityUOM[key]}
-                  >
+                {Object.entries(QuantityUOM).map(([key, value]) => (
+                  <option key={`${ingredientField.id}-ingredient-amountuom-option-${key}`} value={value}>
                     {key}
                   </option>
                 ))}
@@ -206,7 +207,7 @@ const Ingredients = () => {
         <input type="button" value="add ingredient" onClick={onClickAddIngredient} />
         <input type="button" value="add section" onClick={onClickAddSection} />
       </div>
-    </>
+    </div>
   )
 }
 
@@ -243,24 +244,58 @@ const Steps = () => {
   console.log('steps size', stepFields.length)
 
   return (
-    <>
+    <div>
       <h4>Steps</h4>
-      {stepFields.map((stepField, index) => (
-        <div>
-          {/* <Section
+      {stepFields.map((stepField, index) => {
+        const SectionEl = (
+          <Section
+            key={`${stepField.id}-section`}
             currentLoopTempSectionId={currentLoopTempSectionId}
             tempSectionId={stepField.tempSectionId}
-          /> */}
-          <div key={stepField.id}>
-            <FormInput name={`steps.${index}.text`} />
+          />
+        )
+        if (SectionEl !== null) currentLoopTempSectionId = stepField.tempSectionId
+
+        return (
+          <div>
+            {SectionEl}
+            <div key={stepField.id}>
+              <FormInput name={`steps.${index}.text`} label={`${index + 1}.`} />
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
       <div>
         <input type="button" value="add step" onClick={onClickAddStep} />
         <input type="button" value="add section" onClick={onClickAddSection} />
       </div>
-    </>
+    </div>
+  )
+}
+
+const TimeEntry = ({name, nameUOM, label}: {name: string; nameUOM: string; label: string}) => {
+  return (
+    <span>
+      <FormInput name={`time.${name}`} label={label} type="number" />
+      <FormSelect name={`time.${nameUOM}`} required>
+        {Object.entries(TimeUOM).map(([key, value]) => (
+          <option key={`time-${name}-timeuom-option-${key}`} value={value}>
+            {key}
+          </option>
+        ))}
+      </FormSelect>
+    </span>
+  )
+}
+
+const Time = () => {
+  return (
+    <div>
+      <TimeEntry name="inAdvance" nameUOM="inAdvanceUOM" label="Time in advance to prepare" />
+      <TimeEntry name="prep" nameUOM="prepUOM" label="Prep time" />
+      <TimeEntry name="cook" nameUOM="cookUOM" label="Cook time" />
+      <TimeEntry name="total" nameUOM="totalUOM" label="Total time" />
+    </div>
   )
 }
 
@@ -284,23 +319,12 @@ export const NewRecipePage = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
           <FormInput name="name" label="Recipe name" type="text" required />
+          <FormInput name="servings" label="Serves" type="number" />
           <input type="submit" value="Save" />
         </div>
-        <div>
-          <FormInput name="time.inAdvance" label="Time in advance to prepare" type="number" />
-          <FormInput name="time.prep" label="Prep time" type="number" />
-          <FormInput name="time.cook" label="Cook time" type="number" />
-          <FormInput name="time.total" label="Total time" type="number" />
-        </div>
-        <div>
-          <FormInput name="servings" label="Serves" type="number" />
-        </div>
-        <div>
-          <Ingredients />
-        </div>
-        <div>
-          <Steps />
-        </div>
+        <Time />
+        <Ingredients />
+        <Steps />
       </form>
     </FormProvider>
   )
